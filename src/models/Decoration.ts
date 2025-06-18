@@ -7,8 +7,8 @@ interface IDecoration extends Document {
   originalPrice: number;
   rating: number;
   category: string;
-  image: string; // Store Cloudinary image URL
-  imagePublicId?: string; // Store Cloudinary public_id for deletion (optional)
+  image: string;
+  imagePublicId?: string;
   createdAt: Date;
 }
 
@@ -18,10 +18,9 @@ const DecorationSchema: Schema = new mongoose.Schema({
   originalPrice: { type: Number, required: true },
   rating: { type: Number, required: true },
   category: { type: String, required: true },
-  image: { type: String, required: true }, // Store Cloudinary image URL
-  imagePublicId: { type: String }, // Store Cloudinary public_id for deletion
+  image: { type: String, required: true },
+  imagePublicId: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 
-// Create and export the model with the interface
 export default mongoose.model<IDecoration>("Decoration", DecorationSchema);

@@ -8,7 +8,6 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
   try {
     const orderData = req.body;
 
-    // Validate required fields
     if (!orderData.name) {
       res.status(400).json({ message: "Name is required" });
       return;
@@ -18,7 +17,6 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    // Validate phone number formats
     const phoneRegex = /^\+?\d{10,15}$/;
     if (!phoneRegex.test(orderData.phoneNumber)) {
       res.status(400).json({ message: "Invalid primary phone number format" });
@@ -55,7 +53,6 @@ router.patch("/:id", async (req: Request, res: Response): Promise<void> => {
     const { id } = req.params;
     const updateData = req.body;
 
-    // Validate required fields
     if (!updateData.name) {
       res.status(400).json({ message: "Name is required" });
       return;

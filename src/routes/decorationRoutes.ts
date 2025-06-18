@@ -1,35 +1,42 @@
 import express, { Request, Response, NextFunction } from "express";
 import multer from "multer";
-import { cloudinary, decorationStorage } from "../config/cloudinary"; // Adjust path if needed
-import Decoration from "../models/Decoration"; // Adjust path if needed
+import { cloudinary, decorationStorage } from "../config/cloudinary";
+import Decoration from "../models/Decoration";
 
 const router = express.Router();
 
-// Configure multer for decoration image uploads to Cloudinary
 const upload = multer({ storage: decorationStorage });
+
+// Interface for request body in POST and PUT
+interface DecorationRequestBody {
+  title: string;
+  price: number;
+  originalPrice: number;
+  rating: number;
+  category: string;
+}
 
 // POST: Add a new decoration
 router.post(
   "/",
   upload.single("image"),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request<{}, {}, DecorationRequestBody>, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { title, price, originalPrice, rating, category } = req.body;
       if (!title || !price || !originalPrice || !rating || !category || !req.file) {
         res.status(400).json({ error: "All fields are required" });
         return;
       }
-      // Use Cloudinary URL and public_id
-      const image = (req.file as any).path; // Cloudinary URL
-      const imagePublicId = (req.file as any).filename; // Cloudinary public_id
+      const image = req.file.path;
+      const imagePublicId = req.file.filename;
       const decoration = new Decoration({
         title,
-        price: parseFloat(price),
-        originalPrice: parseFloat(originalPrice),
-        rating: parseFloat(rating),
+        price: parseFloat(price.toString()),
+        originalPrice: parseFloat(originalPrice.toString()),
+        rating: parseFloat(rating.toString()),
         category,
         image,
-        imagePublicId, // Store public_id for future deletion
+        imagePublicId,
       });
       await decoration.save();
       res.status(201).json(decoration);
@@ -58,7 +65,7 @@ router.get(
 router.put(
   "/:id",
   upload.single("image"),
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request<{ id: string }, {}, DecorationRequestBody>, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
       const { title, price, originalPrice, rating, category } = req.body;
@@ -66,21 +73,27 @@ router.put(
         res.status(400).json({ error: "All fields are required" });
         return;
       }
-      const updateData: any = {
+      const existingDecoration = await Decoration.findById(id);
+      if (!existingDecoration) {
+        res.status(404).json({ error: "Decoration not found" });
+        return;
+      }
+      const updateData: Partial<DecorationRequestBody> & { image?: string; imagePublicId?: string } = {
         title,
-        price: parseFloat(price),
-        originalPrice: parseFloat(originalPrice),
-        rating: parseFloat(rating),
+        price: parseFloat(price.toString()),
+        originalPrice: parseFloat(originalPrice.toString()),
+        rating: parseFloat(rating.toString()),
         category,
       };
       if (req.file) {
-        // Get existing decoration to delete old image from Cloudinary
-        const existingDecoration = await Decoration.findById(id);
-        if (existingDecoration && existingDecoration.imagePublicId) {
+        if (existingDecoration.imagePublicId) {
           await cloudinary.uploader.destroy(existingDecoration.imagePublicId);
         }
-        updateData.image = (req.file as any).path; // New Cloudinary URL
-        updateData.imagePublicId = (req.file as any).filename; // New public_id
+        updateData.image = req.file.path;
+        updateData.imagePublicId = req.file.filename;
+      } else {
+        updateData.image = existingDecoration.image;
+        updateData.imagePublicId = existingDecoration.imagePublicId;
       }
       const decoration = await Decoration.findByIdAndUpdate(id, updateData, { new: true });
       if (!decoration) {
@@ -98,7 +111,7 @@ router.put(
 // DELETE: Remove a decoration
 router.delete(
   "/:id",
-  async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  async (req: Request<{ id: string }>, res: Response, next: NextFunction): Promise<void> => {
     try {
       const { id } = req.params;
       const decoration = await Decoration.findById(id);
@@ -106,7 +119,6 @@ router.delete(
         res.status(404).json({ error: "Decoration not found" });
         return;
       }
-      // Delete image from Cloudinary
       if (decoration.imagePublicId) {
         await cloudinary.uploader.destroy(decoration.imagePublicId);
       }

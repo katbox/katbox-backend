@@ -9,8 +9,8 @@ interface IOrder extends Document {
   location: string;
   restaurantId: string;
   phoneNumber: string;
-  name: string; // Added
-  altPhoneNumber?: string; // Added, optional
+  name: string;
+  altPhoneNumber?: string;
   selectedItems: { name: string; type: "veg" | "nonveg"; category: string }[];
   createdAt: Date;
 }
@@ -24,8 +24,8 @@ const OrderSchema: Schema = new Schema({
   location: { type: String, required: true },
   restaurantId: { type: String, required: true },
   phoneNumber: { type: String, required: true },
-  name: { type: String, required: true }, // Added
-  altPhoneNumber: { type: String, default: "" }, // Added, optional
+  name: { type: String, required: true },
+  altPhoneNumber: { type: String, default: "" },
   selectedItems: [
     {
       name: { type: String, required: true },

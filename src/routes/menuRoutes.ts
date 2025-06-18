@@ -17,7 +17,7 @@ router.post("/category-image", uploadCategory.single("image"), async (req: Reque
       res.status(400).json({ message: "No image file provided" });
       return;
     }
-    res.status(200).json({ imagePath: req.file.path }); // Cloudinary URL
+    res.status(200).json({ imagePath: req.file.path });
   } catch (error) {
     res.status(500).json({ message: "Error uploading category image", error });
   }
@@ -30,7 +30,7 @@ router.post("/item-image", uploadItem.single("image"), async (req: Request, res:
       res.status(400).json({ message: "No image file provided" });
       return;
     }
-    res.status(200).json({ imagePath: req.file.path }); // Cloudinary URL
+    res.status(200).json({ imagePath: req.file.path });
   } catch (error) {
     res.status(500).json({ message: "Error uploading item image", error });
   }
@@ -169,7 +169,11 @@ router.post("/list/add/:menuId", async (req: Request, res: Response): Promise<vo
     const userId = req.headers["user-id"] as string;
     const menuList = req.body;
 
-    const menu = await Menu.findById(menuId);
+    if (!userId) {
+      res.status(400).json({ message: "User ID is required" });
+      return;
+    }
+      const menu = await Menu.findById(menuId);
     if (!menu || menu.userId !== userId) {
       res.status(403).json({ message: "Unauthorized or menu not found" });
       return;
@@ -180,7 +184,7 @@ router.post("/list/add/:menuId", async (req: Request, res: Response): Promise<vo
       menuList.categories = menuList.categories.map((category: any) => {
         const maxVegSelection = category.maxVegSelection || category.maxSelection || 1;
         const maxNonVegSelection = category.maxNonVegSelection || category.maxSelection || 1;
-        const vegSelectedCount = category.vegSelectedCount || category.selectedCount || 0;
+        const vegSelectedCount = category.countVegSelectedCount || category.selectedCount || 0;
         const nonVegSelectedCount = category.nonVegSelectedCount || 0;
 
         return {

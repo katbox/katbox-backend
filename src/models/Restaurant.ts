@@ -1,7 +1,7 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const RestaurantSchema = new mongoose.Schema({
-  userId: { type: String, required: true, unique: true }, // Clerk userId
+  userId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   city: { type: String, required: true },
   cuisines: { type: [String], required: true },
